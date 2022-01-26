@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>deno-sandbox</title>
+
+	<script>
+		async function retrieveImages() {
+			clearAllLi()
+
+			const response = await fetch('/files')
+			const data = await response.json()
+
+			const filesContainer = getContainer()
+			data.Contents.map(file => filesContainer.appendChild(addLi(file.Key)))
+		}
+
+		const getContainer = () => document.querySelector('ul')
+
+		const addLi = text => {
+			const li = document.createElement('li')
+			li.innerText = text
+
+			return li
+		}
+
+		const clearAllLi = () => {
+			const ul = getContainer()
+
+			while (ul.firstChild) {
+				ul.removeChild(ul.firstChild)
+			}
+		}
+
+		async function uploaded({target}) {
+			startSpinner()
+
+			const newImage = target.files[0]
+
+			await fetch('/file', {
+				method: 'post',
+				body: prepareImageForApi(newImage),
+			})
+
+			stopSpinner(newImage)
+		}
+
+		const startSpinner = () => {
+			const img = document.querySelector('img')
+			img.src = 'https://codemyui.com/wp-content/uploads/2015/09/spinner-loader-animation.gif'
+		}
+
+		const stopSpinner = replacementImage => {
+			const img = document.querySelector('img')
+			img.src = URL.createObjectURL(replacementImage)
+		}
+
+		const prepareImageForApi = file => {
+			const formData = new FormData()
+
+  			formData.append('file', file)
+
+			return formData
+		}
+	</script>
+</head>
+
+<body>
+	<h1>Live from Deno!</h1>
+
+	<h2>Add an image</h2>
+
+	<input type="file" onchange="uploaded(event)">
+	<img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" width="200" />
+
+	<hr>
+
+	<h2>Stored images</h2>
+
+	<button onclick="retrieveImages()">refresh</button>
+	<ul />
+</body>
+</html>
